@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MomentumX Lite - Habit Tracker</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Cyberpunk Header */
+        .cyberpunk-header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 
+                0 0 5px #00ffff,
+                0 0 10px #00ffff,
+                0 0 15px #00ffff,
+                0 0 20px #00ffff;
+            animation: neonFlicker 2s infinite alternate;
+            letter-spacing: 3px;
+        }
+
+        @keyframes neonFlicker {
+            0%, 100% {
+                text-shadow: 
+                    0 0 5px #00ffff,
+                    0 0 10px #00ffff,
+                    0 0 15px #00ffff,
+                    0 0 20px #00ffff;
+            }
+            50% {
+                text-shadow: 
+                    0 0 2px #00ffff,
+                    0 0 5px #00ffff,
+                    0 0 8px #00ffff,
+                    0 0 12px #00ffff;
+            }
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #ff00ff;
+            margin-top: 0.5rem;
+            text-shadow: 0 0 5px #ff00ff;
+        }
+
+        /* Container and Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #00ffff;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            text-shadow: 0 0 10px #00ffff;
+            border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Habit Tracker Styles */
+        .habit-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .habit-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 255, 255, 0.3);
+        }
+
+        .habit-info {
+            flex: 1;
+        }
+
+        .habit-name {
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 0.3rem;
+        }
+
+        .habit-stats {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            margin-left: 1rem;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            transition: 0.4s;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 3px;
+            background: #ffffff;
+            transition: 0.4s;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Task List Styles */
+        .task-input {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #ffffff;
+            font-family: inherit;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .task-input::placeholder {
+            color: #666;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 1rem;
+            cursor: pointer;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .task-checkbox:checked {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            border-color: #00ffff;
+        }
+
+        .task-checkbox:checked::after {
+            content: "✓";
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .task-text {
+            flex: 1;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        /* Self-Coaching Styles */
+        .coaching-question {
+            margin-bottom: 1.5rem;
+        }
+
+        .question-text {
+            color: #ff00ff;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px rgba(255, 0, 255, 0.3);
+        }
+
+        .coaching-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #ffffff;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .coaching-textarea:focus {
+            outline: none;
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        .coaching-textarea::placeholder {
+            color: #666;
+        }
+
+        /* Review Section */
+        .review-summary {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .summary-title {
+            color: #00ffff;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+
+        .summary-content {
+            color: #cccccc;
+            line-height: 1.5;
+        }
+
+        /* Neon Button */
+        .neon-button {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.3),
+                0 4px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+        }
+
+        .neon-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 0 30px rgba(0, 255, 255, 0.5),
+                0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .neon-button:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .glass-card {
+                padding: 1.5rem;
+            }
+
+            .habit-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .toggle-switch {
+                margin-left: 0;
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cyberpunk-header {
+                padding: 1rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+                letter-spacing: 1px;
+            }
+
+            .container {
+                padding: 0.5rem;
+            }
+
+            .glass-card {
+                padding: 1rem;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+
+            .cyberpunk-header,
+            .neon-button,
+            .toggle-switch,
+            .task-input,
+            .task-checkbox,
+            .coaching-textarea {
+                display: none !important;
+            }
+
+            .container {
+                display: block !important;
+                max-width: none !important;
+                padding: 1rem !important;
+            }
+
+            .glass-card {
+                background: #f9f9f9 !important;
+                border: 2px solid #333 !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                page-break-inside: avoid;
+                margin-bottom: 2rem !important;
+            }
+
+            .section-title {
+                color: #000000 !important;
+                text-shadow: none !important;
+                border-bottom: 2px solid #333 !important;
+            }
+
+            .summary-title {
+                color: #000000 !important;
+                text-shadow: none !important;
+            }
+
+            .summary-content,
+            .habit-name,
+            .task-text {
+                color: #000000 !important;
+            }
+
+            .habit-stats {
+                color: #666666 !important;
+            }
+
+            #habit-tracker,
+            #daily-tasks {
+                display: none !important;
+            }
+
+            #review {
+                display: block !important;
+            }
+
+            .review-summary {
+                background: #f0f0f0 !important;
+                border: 1px solid #ccc !important;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="cyberpunk-header">
+        <h1 class="logo">MomentumX Lite</h1>
+        <p class="subtitle">Your Personal Habit & Reflection Tracker</p>
+    </header>
+
+    <div class="container">
+        <!-- Habit Tracker Section -->
+        <section id="habit-tracker" class="glass-card loading">
+            <h2 class="section-title">📆 Daily Habits</h2>
+            <div id="habits-container">
+                <!-- Habits will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Daily Task List Section -->
+        <section id="daily-tasks" class="glass-card loading">
+            <h2 class="section-title">✅ Daily Tasks</h2>
+            <input type="text" id="task-input" class="task-input" placeholder="Add a new task (max 5 tasks)" maxlength="100">
+            <div id="tasks-container">
+                <!-- Tasks will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Self-Coaching Prompts Section -->
+        <section id="self-coaching" class="glass-card loading">
+            <h2 class="section-title">🧠 Daily Reflection</h2>
+            <div id="coaching-container">
+                <!-- Coaching questions will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Review Section -->
+        <section id="review" class="glass-card loading">
+            <h2 class="section-title">📊 Today's Summary</h2>
+            <div id="review-summary" class="review-summary">
+                <!-- Summary will be populated by JavaScript -->
+            </div>
+            <button id="print-button" class="neon-button">Print My Report</button>
+        </section>
+    </div>
+
+    <script>
+        // Application State
+        const APP_STATE = {
+            habits: [
+                { id: 'exercise', name: 'Exercise', streak: 0, lastCompleted: null, completed: false },
+                { id: 'meditate', name: 'Meditate', streak: 0, lastCompleted: null, completed: false },
+                { id: 'read', name: 'Read', streak: 0, lastCompleted: null, completed: false },
+                { id: 'water', name: 'Drink Water', streak: 0, lastCompleted: null, completed: false },
+                { id: 'journal', name: 'Journal', streak: 0, lastCompleted: null, completed: false }
+            ],
+            tasks: [],
+            coaching: {
+                'gratitude': '',
+                'learned': '',
+                'challenges': '',
+                'emotions': '',
+                'achievements': '',
+                'tomorrow': '',
+                'reflection': ''
+            }
+        };
+
+        const COACHING_QUESTIONS = [
+            { id: 'gratitude', text: 'What are you grateful for today?' },
+            { id: 'learned', text: 'What did you learn today?' },
+            { id: 'challenges', text: 'What challenges did you face and how did you handle them?' },
+            { id: 'emotions', text: 'How are you feeling right now?' },
+            { id: 'achievements', text: 'What did you accomplish today?' },
+            { id: 'tomorrow', text: 'What do you want to focus on tomorrow?' },
+            { id: 'reflection', text: 'Any additional thoughts or reflections?' }
+        ];
+
+        // Utility Functions
+        function safeLocalStorage(action, key, value = null) {
+            try {
+                if (action === 'get') {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : null;
+                } else if (action === 'set') {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                }
+            } catch (error) {
+                console.error('LocalStorage error:', error);
+                return action === 'get' ? null : false;
+            }
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function isToday(dateString) {
+            if (!dateString) return false;
+            const date = new Date(dateString);
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        function calculateStreak(lastCompleted, currentCompleted) {
+            if (!currentCompleted) return 0;
+            if (!lastCompleted) return 1;
+            
+            const last = new Date(lastCompleted);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (isToday(lastCompleted)) {
+                return 1; // Already completed today
+            } else if (last.toDateString() === yesterday.toDateString()) {
+                return 1; // Continue streak
+            } else {
+                return 1; // Reset streak
+            }
+        }
+
+        // Data Management
+        function loadData() {
+            try {
+                const savedHabits = safeLocalStorage('get', 'momentumx_habits');
+                const savedTasks = safeLocalStorage('get', 'momentumx_tasks');
+                const savedCoaching = safeLocalStorage('get', 'momentumx_coaching');
+
+                if (savedHabits) {
+                    APP_STATE.habits = savedHabits;
+                }
+
+                if (savedTasks) {
+                    APP_STATE.tasks = savedTasks;
+                }
+
+                if (savedCoaching) {
+                    APP_STATE.coaching = { ...APP_STATE.coaching, ...savedCoaching };
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        function saveData() {
+            try {
+                safeLocalStorage('set', 'momentumx_habits', APP_STATE.habits);
+                safeLocalStorage('set', 'momentumx_tasks', APP_STATE.tasks);
+                safeLocalStorage('set', 'momentumx_coaching', APP_STATE.coaching);
+            } catch (error) {
+                console.error('Error saving data:', error);
+            }
+        }
+
+        // Habit Functions
+        function renderHabits() {
+            const container = document.getElementById('habits-container');
+            container.innerHTML = '';
+
+            APP_STATE.habits.forEach(habit => {
+                const habitElement = document.createElement('div');
+                habitElement.className = 'habit-item';
+                
+                const lastCompletedText = habit.lastCompleted 
+                    ? `Last: ${formatDate(new Date(habit.lastCompleted))}`
+                    : 'Never completed';
+
+                habitElement.innerHTML = `
+                    <div class="habit-info">
+                        <div class="habit-name">${habit.name}</div>
+                        <div class="habit-stats">
+                            Streak: ${habit.streak} days | ${lastCompletedText}
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" ${habit.completed ? 'checked' : ''} 
+                               onchange="toggleHabit('${habit.id}')">
+                        <span class="slider"></span>
+                    </label>
+                `;
+
+                container.appendChild(habitElement);
+            });
+        }
+
+        function toggleHabit(habitId) {
+            try {
+                const habit = APP_STATE.habits.find(h => h.id === habitId);
+                if (!habit) return;
+
+                const today = new Date().toISOString();
+                
+                if (habit.completed) {
+                    // Unchecking - reset today's completion
+                    habit.completed = false;
+                    if (isToday(habit.lastCompleted)) {
+                        habit.streak = Math.max(0, habit.streak - 1);
+                    }
+                } else {
+                    // Checking - mark as completed today
+                    habit.completed = true;
+                    habit.lastCompleted = today;
+                    
+                    if (habit.streak === 0) {
+                        habit.streak = 1;
+                    } else if (!isToday(habit.lastCompleted)) {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const lastDate = new Date(habit.lastCompleted);
+                        
+                        if (lastDate.toDateString() === yesterday.toDateString()) {
+                            habit.streak += 1;
+                        } else {
+                            habit.streak = 1;
+                        }
+                    }
+                }
+
+                saveData();
+                renderHabits();
+                updateReviewSection();
+            } catch (error) {
+                console.error('Error toggling habit:', error);
+            }
+        }
+
+        // Task Functions
+        function renderTasks() {
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = '';
+
+            APP_STATE.tasks.forEach((task, index) => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                
+                taskElement.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" 
+                           ${task.completed ? 'checked' : ''} 
+                           onchange="toggleTask(${index})">
+                    <span class="task-text ${task.completed ? 'completed' : ''}">${task.text}</span>
+                    <button onclick="deleteTask(${index})" style="
+                        background: none; 
+                        border: none; 
+                        color: #ff4444; 
+                        cursor: pointer; 
+                        margin-left: auto; 
+                        padding: 0.5rem;
+                        border-radius: 5px;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,68,68,0.2)'" 
+                       onmouseout="this.style.background='none'">×</button>
+                `;
+
+                container.appendChild(taskElement);
+            });
+        }
+
+        function addTask() {
+            const input = document.getElementById('task-input');
+            const taskText = input.value.trim();
+
+            if (!taskText) return;
+            if (APP_STATE.tasks.length >= 5) {
+                alert('Maximum 5 tasks allowed');
+                return;
+            }
+
+            try {
+                APP_STATE.tasks.push({
+                    text: taskText,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                });
+
+                input.value = '';
+                saveData();
+                renderTasks();
+                updateReviewSection();
+            } catch (error) {
+                console.error('Error adding task:', error);
+            }
+        }
+
+        function toggleTask(index) {
+            try {
+                if (APP_STATE.tasks[index]) {
+                    APP_STATE.tasks[index].completed = !APP_STATE.tasks[index].completed;
+                    saveData();
+                    renderTasks();
+                    updateReviewSection();
+                }
+            } catch (error) {
+                console.error('Error toggling task:', error);
+            }
+        }
+
+        function deleteTask(index) {
+            try {
+                APP_STATE.tasks.splice(index, 1);
+                saveData();
+                renderTasks();
+                updateReviewSection();
+            } catch (error) {
+                console.error('Error deleting task:', error);
+            }
+        }
+
+        // Coaching Functions
+        function renderCoaching() {
+            const container = document.getElementById('coaching-container');
+            container.innerHTML = '';
+
+            COACHING_QUESTIONS.forEach(question => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'coaching-question';
+                
+                questionElement.innerHTML = `
+                    <div class="question-text">${question.text}</div>
+                    <textarea class="coaching-textarea" 
+                              placeholder="Write your thoughts here..."
+                              onblur="saveCoachingAnswer('${question.id}', this.value)"
+                              oninput="debounceCoachingSave('${question.id}', this.value)">${APP_STATE.coaching[question.id] || ''}</textarea>
+                `;
+
+                container.appendChild(questionElement);
+            });
+        }
+
+        let coachingTimeout;
+        function debounceCoachingSave(questionId, value) {
+            clearTimeout(coachingTimeout);
+            coachingTimeout = setTimeout(() => {
+                saveCoachingAnswer(questionId, value);
+            }, 1000);
+        }
+
+        function saveCoachingAnswer(questionId, value) {
+            try {
+                APP_STATE.coaching[questionId] = value;
+                saveData();
+                updateReviewSection();
+            } catch (error) {
+                console.error('Error saving coaching answer:', error);
+            }
+        }
+
+        // Review Functions
+        function updateReviewSection() {
+            const container = document.getElementById('review-summary');
+            
+            try {
+                const completedHabits = APP_STATE.habits.filter(h => h.completed).length;
+                const totalHabits = APP_STATE.habits.length;
+                const completedTasks = APP_STATE.tasks.filter(t => t.completed).length;
+                const totalTasks = APP_STATE.tasks.length;
+
+                let summaryHTML = `
+                    <div class="summary-item">
+                        <div class="summary-title">Habits Progress</div>
+                        <div class="summary-content">
+                            Completed ${completedHabits} out of ${totalHabits} habits today
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-title">Tasks Progress</div>
+                        <div class="summary-content">
+                            Completed ${completedTasks} out of ${totalTasks} tasks today
+                        </div>
+                    </div>
+                `;
+
+                // Add coaching responses
+                COACHING_QUESTIONS.forEach(question => {
+                    const answer = APP_STATE.coaching[question.id];
+                    if (answer && answer.trim()) {
+                        summaryHTML += `
+                            <div class="summary-item">
+                                <div class="summary-title">${question.text}</div>
+                                <div class="summary-content">${answer}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                container.innerHTML = summaryHTML;
+            } catch (error) {
+                console.error('Error updating review section:', error);
+                container.innerHTML = '<div class="summary-content">Error loading summary</div>';
+            }
+        }
+
+        // Print Function
+        function printReport() {
+            try {
+                window.print();
+            } catch (error) {
+                console.error('Error printing report:', error);
+                alert('Unable to print. Please try using your browser\'s print function (Ctrl+P).');
+            }
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            try {
+                // Task input
+                const taskInput = document.getElementById('task-input');
+                taskInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addTask();
+                    }
+                });
+
+                // Print button
+                const printButton = document.getElementById('print-button');
+                printButton.addEventListener('click', printReport);
+
+                // Add loading animation completion
+                setTimeout(() => {
+                    document.querySelectorAll('.loading').forEach(el => {
+                        el.style.opacity = '1';
+                    });
+                }, 100);
+            } catch (error) {
+                console.error('Error setting up event listeners:', error);
+            }
+        }
+
+        // Initialize Application
+        function initApp() {
+            try {
+                loadData();
+                renderHabits();
+                renderTasks();
+                renderCoaching();
+                updateReviewSection();
+                setupEventListeners();
+                
+                console.log('MomentumX Lite initialized successfully');
+            } catch (error) {
+                console.error('Error initializing app:', error);
+            }
+        }
+
+        // Make functions globally available
+        window.toggleHabit = toggleHabit;
+        window.toggleTask = toggleTask;
+        window.deleteTask = deleteTask;
+        window.saveCoachingAnswer = saveCoachingAnswer;
+        window.debounceCoachingSave = debounceCoachingSave;
+
+        // Reset daily data at midnight
+        function checkDailyReset() {
+            try {
+                const lastReset = safeLocalStorage('get', 'momentumx_last_reset');
+                const today = new Date().toDateString();
+                
+                if (lastReset !== today) {
+                    // Reset daily completions
+                    APP_STATE.habits.forEach(habit => {
+                        habit.completed = false;
+                    });
+                    
+                    // Clear tasks (optional - you might want to keep them)
+                    // APP_STATE.tasks = [];
+                    
+                    safeLocalStorage('set', 'momentumx_last_reset', today);
+                    saveData();
+                }
+            } catch (error) {
+                console.error('Error checking daily reset:', error);
+            }
+        }
+
+        // Initialize application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            checkDailyReset();
+            initApp();
+        });
+    </script>
+</body>
+</html>
