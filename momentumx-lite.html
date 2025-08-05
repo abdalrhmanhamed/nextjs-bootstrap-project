@@ -497,6 +497,12 @@
     <header class="cyberpunk-header">
         <h1 class="logo">MomentumX Lite</h1>
         <p class="subtitle">Your Personal Habit & Reflection Tracker</p>
+        <div id="xp-bar-container" style="margin-top: 1rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <div id="xp-bar" style="width: 100%; height: 20px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; box-shadow: 0 0 10px #00ffff;">
+                <div id="xp-progress" style="height: 100%; width: 0%; background: linear-gradient(90deg, #00ffff, #ff00ff, #00ff00); box-shadow: 0 0 10px #00ffff inset;"></div>
+            </div>
+            <div id="xp-level-text" style="color: #00ffff; text-align: center; margin-top: 0.3rem; font-weight: bold; text-shadow: 0 0 5px #00ffff;"></div>
+        </div>
     </header>
 
     <div class="container">
@@ -514,6 +520,18 @@
             <input type="text" id="task-input" class="task-input" placeholder="Add a new task (max 5 tasks)" maxlength="100">
             <div id="tasks-container">
                 <!-- Tasks will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Mood Tracker Section -->
+        <section id="mood-tracker" class="glass-card loading">
+            <h2 class="section-title">😊 Mood Tracker</h2>
+            <div id="mood-buttons" style="display: flex; justify-content: space-around; font-size: 2rem; cursor: pointer;">
+                <button class="mood-btn" data-mood="😄" title="Very Happy">😄</button>
+                <button class="mood-btn" data-mood="🙂" title="Happy">🙂</button>
+                <button class="mood-btn" data-mood="😐" title="Neutral">😐</button>
+                <button class="mood-btn" data-mood="😞" title="Sad">😞</button>
+                <button class="mood-btn" data-mood="😢" title="Very Sad">😢</button>
             </div>
         </section>
 
@@ -535,15 +553,19 @@
         </section>
     </div>
 
+    <footer class="glass-card" style="text-align: center; margin: 2rem auto; max-width: 600px; color: #00ff00; font-weight: bold; text-shadow: 0 0 10px #00ff00;">
+        <div id="motivational-quote">Loading motivational quote...</div>
+    </footer>
+
     <script>
         // Application State
         const APP_STATE = {
             habits: [
-                { id: 'exercise', name: 'Exercise', streak: 0, lastCompleted: null, completed: false },
-                { id: 'meditate', name: 'Meditate', streak: 0, lastCompleted: null, completed: false },
-                { id: 'read', name: 'Read', streak: 0, lastCompleted: null, completed: false },
-                { id: 'water', name: 'Drink Water', streak: 0, lastCompleted: null, completed: false },
-                { id: 'journal', name: 'Journal', streak: 0, lastCompleted: null, completed: false }
+                { id: 'exercise', name: 'Exercise', streak: 0, lastCompleted: null, completed: false, xp: 10 },
+                { id: 'meditate', name: 'Meditate', streak: 0, lastCompleted: null, completed: false, xp: 8 },
+                { id: 'read', name: 'Read', streak: 0, lastCompleted: null, completed: false, xp: 7 },
+                { id: 'water', name: 'Drink Water', streak: 0, lastCompleted: null, completed: false, xp: 5 },
+                { id: 'journal', name: 'Journal', streak: 0, lastCompleted: null, completed: false, xp: 6 }
             ],
             tasks: [],
             coaching: {
@@ -554,7 +576,9 @@
                 'achievements': '',
                 'tomorrow': '',
                 'reflection': ''
-            }
+            },
+            mood: null,
+            xp: 0
         };
 
         const COACHING_QUESTIONS = [
@@ -972,7 +996,112 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkDailyReset();
             initApp();
+            setupMoodTracker();
+            setupMotivationalQuotes();
+            updateXPBar();
         });
+
+        // Mood Tracker Functions
+        function setupMoodTracker() {
+            const moodButtons = document.querySelectorAll('.mood-btn');
+            moodButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const selectedMood = button.getAttribute('data-mood');
+                    APP_STATE.mood = selectedMood;
+                    saveData();
+                    updateMoodUI();
+                    updateReviewSection();
+                });
+            });
+            updateMoodUI();
+        }
+
+        function updateMoodUI() {
+            const moodButtons = document.querySelectorAll('.mood-btn');
+            moodButtons.forEach(button => {
+                if (button.getAttribute('data-mood') === APP_STATE.mood) {
+                    button.style.boxShadow = '0 0 15px 3px #00ffff';
+                    button.style.transform = 'scale(1.2)';
+                } else {
+                    button.style.boxShadow = 'none';
+                    button.style.transform = 'scale(1)';
+                }
+            });
+        }
+
+        // XP and Level Functions
+        function calculateXP() {
+            let totalXP = 0;
+            APP_STATE.habits.forEach(habit => {
+                if (habit.completed) totalXP += habit.xp;
+            });
+            APP_STATE.tasks.forEach(task => {
+                if (task.completed) totalXP += 3; // Each task worth 3 XP
+            });
+            APP_STATE.xp = totalXP;
+        }
+
+        function getLevel(xp) {
+            if (xp < 20) return { level: 1, name: 'Beginner', nextLevelXP: 20 };
+            if (xp < 50) return { level: 2, name: 'Consistent', nextLevelXP: 50 };
+            if (xp < 100) return { level: 3, name: 'Dedicated', nextLevelXP: 100 };
+            if (xp < 200) return { level: 4, name: 'Advanced', nextLevelXP: 200 };
+            return { level: 5, name: 'Master', nextLevelXP: xp + 50 };
+        }
+
+        function updateXPBar() {
+            calculateXP();
+            const xpBar = document.getElementById('xp-progress');
+            const xpLevelText = document.getElementById('xp-level-text');
+            const levelInfo = getLevel(APP_STATE.xp);
+            const progressPercent = Math.min(100, (APP_STATE.xp / levelInfo.nextLevelXP) * 100);
+            xpBar.style.width = progressPercent + '%';
+            xpLevelText.textContent = `Level ${levelInfo.level} - ${levelInfo.name} (${APP_STATE.xp} XP)`;
+        }
+
+        // Override toggleHabit and toggleTask to update XP bar
+        const originalToggleHabit = toggleHabit;
+        toggleHabit = function(habitId) {
+            originalToggleHabit(habitId);
+            updateXPBar();
+        };
+
+        const originalToggleTask = toggleTask;
+        toggleTask = function(index) {
+            originalToggleTask(index);
+            updateXPBar();
+        };
+
+        // Motivational Quotes Functions
+        const QUOTES = [
+            "Believe you can and you're halfway there.",
+            "Don't watch the clock; do what it does. Keep going.",
+            "Success is not final, failure is not fatal: It is the courage to continue that counts.",
+            "The future depends on what you do today.",
+            "Dream big and dare to fail.",
+            "Keep your eyes on the stars, and your feet on the ground.",
+            "The harder you work for something, the greater you'll feel when you achieve it."
+        ];
+
+        function setupMotivationalQuotes() {
+            const quoteElement = document.getElementById('motivational-quote');
+            const lastQuoteDate = safeLocalStorage('get', 'momentumx_quote_date');
+            const today = new Date().toDateString();
+
+            if (lastQuoteDate === today) {
+                const savedQuote = safeLocalStorage('get', 'momentumx_quote');
+                if (savedQuote) {
+                    quoteElement.textContent = savedQuote;
+                    return;
+                }
+            }
+
+            const randomIndex = Math.floor(Math.random() * QUOTES.length);
+            const quote = QUOTES[randomIndex];
+            quoteElement.textContent = quote;
+            safeLocalStorage('set', 'momentumx_quote', quote);
+            safeLocalStorage('set', 'momentumx_quote_date', today);
+        }
     </script>
 </body>
 </html>
